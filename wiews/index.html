@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Form</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Form</h2>
+    <form id="form-area"></form>
+  </div>
+<script>
+async function loadForm() {
+  const res = await fetch('/questions');
+  const data = await res.json();
+  const form = document.getElementById("form-area");
+  data.forEach((q, i) => {
+    const div = document.createElement("div");
+    div.className = "question";
+    let html = `<label>${q.question}</label>`;
+    if (q.type === "textarea") {
+      html += `<textarea name="q${i}" required></textarea>`;
+    } else if (q.type === "radio" || q.type === "checkbox") {
+      q.options.forEach(opt => {
+        html += `<label><input type="${q.type}" name="q${i}" value="${opt}"> ${opt}</label><br>`;
+      });
+    } else if (q.type === "dropdown") {
+      html += `<select name="q${i}">`;
+      q.options.forEach(opt => {
+        html += `<option value="${opt}">${opt}</option>`;
+      });
+      html += `</select>`;
+    } else {
+      html += `<input type="${q.type}" name="q${i}" required>`;
+    }
+    div.innerHTML = html;
+    form.appendChild(div);
+  });
+  form.innerHTML += `<button type="submit">Gönder</button>`;
+}
+document.getElementById("form-area").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const obj = Object.fromEntries(formData.entries());
+  const res = await fetch("/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(obj)
+  });
+  alert(await res.text());
+  e.target.reset();
+});
+loadForm();
+</script>
+</body>
+</html>
